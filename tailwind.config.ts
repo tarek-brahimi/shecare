@@ -13,6 +13,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -46,6 +49,18 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        shecare: {
+          pink: "hsl(var(--shecare-pink))",
+          "pink-light": "hsl(var(--shecare-pink-light))",
+          blue: "hsl(var(--shecare-blue))",
+          "blue-light": "hsl(var(--shecare-blue-light))",
+          green: "hsl(var(--shecare-green))",
+          "green-light": "hsl(var(--shecare-green-light))",
+          orange: "hsl(var(--shecare-orange))",
+          "orange-light": "hsl(var(--shecare-orange-light))",
+          purple: "hsl(var(--shecare-purple))",
+          "purple-light": "hsl(var(--shecare-purple-light))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
