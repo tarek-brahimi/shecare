@@ -3,6 +3,7 @@ import { SheCard } from "@/ui/Card";
 import { SheInput } from "@/ui/Input";
 import { SheButton } from "@/ui/Button";
 import { FiSend, FiZap } from "react-icons/fi";
+import { predictCancer } from "@/services/aiService";
 
 interface Message {
   id: number;
@@ -11,27 +12,68 @@ interface Message {
 }
 
 const initialMessages: Message[] = [
-  { id: 1, text: "Hello! I'm your SheCare AI assistant. I'm here to support you with information, emotional guidance, and helpful resources. How can I help you today? 🌸", sender: "ai" },
+  {
+    id: 1,
+    text: "Hello! I'm your SheCare AI assistant 🌸 I can help you with breast cancer risk assessment. Type 'scan' to start a diagnostic, or ask me anything!",
+    sender: "ai",
+  },
+];
+
+// Valeurs moyennes du dataset (utilisées pour la demo)
+const DEFAULT_FEATURES = [
+  17.99, 10.38, 122.8, 1001.0, 0.1184, 0.2776, 0.3001, 0.1471,
+  0.2419, 0.07871, 1.095, 0.9053, 8.589, 153.4, 0.006399, 0.04904,
+  0.05373, 0.01587, 0.03003, 0.006193, 25.38, 17.33, 184.6, 2019.0,
+  0.1622, 0.6656, 0.7119, 0.2654, 0.4601, 0.1189,
 ];
 
 export function AIChatPanel() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
-    const userMsg: Message = { id: Date.now(), text: input, sender: "user" };
-    setMessages((prev) => [...prev, userMsg]);
+  const addMessage = (text: string, sender: "user" | "ai") => {
+    setMessages((prev) => [...prev, { id: Date.now(), text, sender }]);
+  };
+
+  const sendMessage = async () => {
+    if (!input.trim() || loading) return;
+    const userText = input.trim();
+    addMessage(userText, "user");
     setInput("");
+    setLoading(true);
 
-    setTimeout(() => {
-      const aiMsg: Message = {
-        id: Date.now() + 1,
-        text: "Thank you for sharing that with me. I understand this can be challenging. Remember, you're not alone in this journey. Would you like me to suggest some resources or connect you with community support?",
-        sender: "ai",
-      };
-      setMessages((prev) => [...prev, aiMsg]);
-    }, 1000);
+    try {
+      // Si l'utilisatrice tape "scan" → lancer le diagnostic
+      if (userText.toLowerCase().includes("scan") || 
+          userText.toLowerCase().includes("diagnostic") ||
+          userText.toLowerCase().includes("check")) {
+        
+        addMessage("🔍 Running your breast cancer risk assessment...", "ai");
+        
+        const result = await predictCancer(DEFAULT_FEATURES);
+        
+        const response = result.resultat.includes("Bénin")
+          ? `✅ Good news! Your assessment result: **Benign** (probability: ${(result.probabilite * 100).toFixed(1)}%)\n\nThis suggests low risk. However, please consult your doctor regularly. ${result.message}`
+          : `⚠️ Assessment result: **Malignant** (probability: ${((1 - result.probabilite) * 100).toFixed(1)}%)\n\nPlease consult a medical professional as soon as possible. ${result.message}`;
+        
+        addMessage(response, "ai");
+
+      } else {
+        // Réponse générale pour les autres messages
+        addMessage(
+          "I'm here to support you 💜 Type 'scan' to run a breast cancer risk assessment, or ask me about symptoms, prevention, or resources.",
+          "ai"
+        );
+      }
+    } catch (error) {
+      addMessage(
+        "⚠️ Could not connect to the AI model. Make sure the API is running on http://127.0.0.1:8000",
+        "ai"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -43,33 +85,47 @@ export function AIChatPanel() {
           </div>
           <div>
             <h3 className="text-sm font-semibold text-foreground">SheCare AI</h3>
-            <p className="text-xs text-muted-foreground">Always here for you</p>
+            <p className="text-xs text-muted-foreground">
+              {loading ? "Analyzing..." : "Always here for you"}
+            </p>
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
-                msg.sender === "user"
-                  ? "shecare-gradient text-primary-foreground rounded-br-md"
-                  : "bg-muted text-foreground rounded-bl-md"
-              }`}>
+            <div
+              key={msg.id}
+              className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-line ${
+                  msg.sender === "user"
+                    ? "shecare-gradient text-primary-foreground rounded-br-md"
+                    : "bg-muted text-foreground rounded-bl-md"
+                }`}
+              >
                 {msg.text}
               </div>
             </div>
           ))}
+          {loading && (
+            <div className="flex justify-start">
+              <div className="bg-muted px-4 py-3 rounded-2xl rounded-bl-md text-sm text-muted-foreground">
+                SheCare AI is thinking...
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="p-4 border-t border-border">
           <div className="flex gap-2">
             <SheInput
-              placeholder="Type your message..."
+              placeholder="Type 'scan' for diagnosis or ask anything..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             />
-            <SheButton onClick={sendMessage} disabled={!input.trim()}>
+            <SheButton onClick={sendMessage} disabled={!input.trim() || loading}>
               <FiSend className="w-4 h-4" />
             </SheButton>
           </div>
