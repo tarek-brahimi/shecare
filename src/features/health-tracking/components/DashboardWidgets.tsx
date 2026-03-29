@@ -4,6 +4,7 @@ import { FiCalendar, FiHeart, FiUsers, FiClock, FiActivity, FiMessageCircle, FiZ
 import { SheCard } from "@/ui/Card";
 import { getProgressPercent } from "@/utils/helpers";
 import { Link } from "react-router-dom";
+import type { Stat } from "@/types/domain";
 
 const iconMap: Record<string, React.ElementType> = {
   calendar: FiCalendar,
@@ -19,8 +20,53 @@ const colorMap: Record<string, string> = {
   clock: "bg-shecare-orange-light text-shecare-orange",
 };
 
+function titleFromKey(key: string) {
+  return key
+    .replace(/([A-Z])/g, " $1")
+    .replace(/[_-]/g, " ")
+    .replace(/^./, (char) => char.toUpperCase())
+    .trim();
+}
+
+function normalizeStats(payload: unknown): Stat[] {
+  if (Array.isArray(payload)) {
+    return payload as Stat[];
+  }
+
+  if (payload && typeof payload === "object") {
+    const record = payload as Record<string, unknown>;
+
+    if (Array.isArray(record.stats)) {
+      return record.stats as Stat[];
+    }
+
+    if (Array.isArray(record.data)) {
+      return record.data as Stat[];
+    }
+
+    const primitiveEntries = Object.entries(record).filter(([, value]) => {
+      const type = typeof value;
+      return type === "string" || type === "number";
+    });
+
+    if (primitiveEntries.length > 0) {
+      return primitiveEntries.map(([key, value]) => ({
+        label: titleFromKey(key),
+        value: value as string | number,
+        icon: "activity",
+      }));
+    }
+  }
+
+  return [];
+}
+
 export function StatsGrid() {
-  const { data: stats, isLoading, isError } = useQuery({ queryKey: ["stats"], queryFn: getUserStats });
+  const { data: stats = [], isLoading, isError } = useQuery({
+    queryKey: ["stats"],
+    queryFn: getUserStats,
+    select: normalizeStats,
+  });
 
   if (isLoading) {
     return (
@@ -44,9 +90,17 @@ export function StatsGrid() {
     );
   }
 
+  if (stats.length === 0) {
+    return (
+      <SheCard className="col-span-full text-center py-12">
+        <p className="text-muted-foreground">No dashboard stats available yet.</p>
+      </SheCard>
+    );
+  }
+
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      {stats?.map((stat) => {
+      {stats.map((stat) => {
         const Icon = iconMap[stat.icon] || FiActivity;
         const color = colorMap[stat.icon] || "bg-muted text-muted-foreground";
         return (
