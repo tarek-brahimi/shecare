@@ -1,4 +1,4 @@
-import { AIChatPanel } from "@/features/ai";
+import { AIChatPanel } from "@/features/ai/AIChatPanel";
 
 export default function AISupport() {
   return (

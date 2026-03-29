@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "sonner";
+import type { ReactNode } from "react";
 import { DarkModeProvider } from "@/context/DarkModeContext";
 import { AuthProvider } from "@/context/AuthContext";
 import AppLayout from "@/ui/AppLayout";
@@ -18,6 +19,14 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+function protectedLayout(page: ReactNode) {
+  return (
+    <ProtectedRoute>
+      <AppLayout>{page}</AppLayout>
+    </ProtectedRoute>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <DarkModeProvider>
@@ -28,12 +37,12 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<GuestOnlyRoute><Login /></GuestOnlyRoute>} />
             <Route path="/register" element={<GuestOnlyRoute><Register /></GuestOnlyRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>} />
-            <Route path="/community" element={<ProtectedRoute><AppLayout><Community /></AppLayout></ProtectedRoute>} />
-            <Route path="/resources" element={<ProtectedRoute><AppLayout><Resources /></AppLayout></ProtectedRoute>} />
-            <Route path="/health" element={<ProtectedRoute><AppLayout><Health /></AppLayout></ProtectedRoute>} />
-            <Route path="/ai" element={<ProtectedRoute><AppLayout><AISupport /></AppLayout></ProtectedRoute>} />
-            <Route path="/consultation" element={<ProtectedRoute><AppLayout><Consultation /></AppLayout></ProtectedRoute>} />
+            <Route path="/dashboard" element={protectedLayout(<Dashboard />)} />
+            <Route path="/community" element={protectedLayout(<Community />)} />
+            <Route path="/resources" element={protectedLayout(<Resources />)} />
+            <Route path="/health" element={protectedLayout(<Health />)} />
+            <Route path="/ai" element={protectedLayout(<AISupport />)} />
+            <Route path="/consultation" element={protectedLayout(<Consultation />)} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -1,4 +1,4 @@
-import { ConsultationPanel } from "@/features/doctor-access";
+import { ConsultationPanel } from "@/features/doctor-access/ConsultationPanel";
 
 export default function Consultation() {
   return (

@@ -1,4 +1,4 @@
-import { CreatePostCard, PostsFeed } from "@/features/community";
+import { CreatePostCard, PostsFeed } from "@/features/community/CommunityFeed";
 
 export default function Community() {
   return (
