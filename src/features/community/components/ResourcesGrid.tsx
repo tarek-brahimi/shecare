@@ -58,8 +58,9 @@ export function ResourcesGrid() {
   const { data: resources, isLoading, isError } = useQuery({ queryKey: ["resources"], queryFn: getResources });
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>("all");
+  const resourcesList = Array.isArray(resources) ? resources : [];
 
-  const filtered = resources?.filter((r) => {
+  const filtered = resourcesList.filter((r) => {
     const matchSearch = r.title.toLowerCase().includes(search.toLowerCase()) || r.description.toLowerCase().includes(search.toLowerCase());
     const matchCategory = category === "all" || r.category === category;
     return matchSearch && matchCategory;
