@@ -22,6 +22,61 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+function extractArrayFromPayload<T>(value: unknown, preferredKeys: string[] = []): T[] {
+  if (Array.isArray(value)) {
+    return value as T[];
+  }
+
+  if (!isRecord(value)) {
+    return [];
+  }
+
+  const queue: Array<{ node: unknown; depth: number }> = [{ node: value, depth: 0 }];
+  const maxDepth = 3;
+  const candidateKeys = [...preferredKeys, "data", "items", "results", "rows"];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current || current.depth > maxDepth || !isRecord(current.node)) {
+      continue;
+    }
+
+    for (const key of candidateKeys) {
+      const candidate = current.node[key];
+      if (Array.isArray(candidate)) {
+        return candidate as T[];
+      }
+    }
+
+    for (const nextValue of Object.values(current.node)) {
+      if (Array.isArray(nextValue)) {
+        return nextValue as T[];
+      }
+
+      if (isRecord(nextValue)) {
+        queue.push({ node: nextValue, depth: current.depth + 1 });
+      }
+    }
+  }
+
+  return [];
+}
+
+function extractObjectFromPayload<T extends Record<string, unknown>>(value: unknown, preferredKeys: string[] = []): T | null {
+  if (isRecord(value)) {
+    for (const key of [...preferredKeys, "data", "result", "profile"]) {
+      const candidate = value[key];
+      if (isRecord(candidate)) {
+        return candidate as T;
+      }
+    }
+
+    return value as T;
+  }
+
+  return null;
+}
+
 function toMessage(value: unknown): string | null {
   if (typeof value === "string" && value.trim()) {
     return value;
@@ -128,24 +183,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
 export async function getPosts() {
   const response = await request<unknown>(`${API_PREFIX}/posts`);
-
-  if (Array.isArray(response)) {
-    return response as Post[];
-  }
-
-  if (isRecord(response)) {
-    const posts = response.posts;
-    if (Array.isArray(posts)) {
-      return posts as Post[];
-    }
-
-    const data = response.data;
-    if (Array.isArray(data)) {
-      return data as Post[];
-    }
-  }
-
-  return [];
+  return extractArrayFromPayload<Post>(response, ["posts"]);
 }
 
 export async function createPost(payload: {
@@ -186,54 +224,26 @@ export async function commentOnPost(postId: string, comment: string) {
 
 export async function getResources() {
   const response = await request<unknown>(`${API_PREFIX}/resources`);
-
-  if (Array.isArray(response)) {
-    return response as Resource[];
-  }
-
-  if (isRecord(response)) {
-    const resources = response.resources;
-    if (Array.isArray(resources)) {
-      return resources as Resource[];
-    }
-
-    const data = response.data;
-    if (Array.isArray(data)) {
-      return data as Resource[];
-    }
-  }
-
-  return [];
+  return extractArrayFromPayload<Resource>(response, ["resources"]);
 }
 
-export async function getUserStats(userId: string) {
-  return request<Stat[]>(`${API_PREFIX}/stats`);
+export async function getUserStats() {
+  const response = await request<unknown>(`${API_PREFIX}/stats`);
+  return extractArrayFromPayload<Stat>(response, ["stats"]);
 }
 
 export async function getCurrentUser() {
-  return request<User>(`${API_PREFIX}/users/me`);
+  const response = await request<unknown>(`${API_PREFIX}/users/me`);
+  const user = extractObjectFromPayload<User & Record<string, unknown>>(response, ["user"]);
+  if (!user) {
+    throw new ApiError("Could not read current user payload", 500, response);
+  }
+  return user as User;
 }
 
 export async function getSymptoms() {
   const response = await request<unknown>(`${API_PREFIX}/symptoms`);
-
-  if (Array.isArray(response)) {
-    return response as Symptom[];
-  }
-
-  if (isRecord(response)) {
-    const symptoms = response.symptoms;
-    if (Array.isArray(symptoms)) {
-      return symptoms as Symptom[];
-    }
-
-    const data = response.data;
-    if (Array.isArray(data)) {
-      return data as Symptom[];
-    }
-  }
-
-  return [];
+  return extractArrayFromPayload<Symptom>(response, ["symptoms"]);
 }
 
 export async function createSymptom(payload: { name: string; severity: number; date?: string }) {
@@ -245,24 +255,7 @@ export async function createSymptom(payload: { name: string; severity: number; d
 
 export async function getAppointments() {
   const response = await request<unknown>(`${API_PREFIX}/appointments`);
-
-  if (Array.isArray(response)) {
-    return response as Appointment[];
-  }
-
-  if (isRecord(response)) {
-    const appointments = response.appointments;
-    if (Array.isArray(appointments)) {
-      return appointments as Appointment[];
-    }
-
-    const data = response.data;
-    if (Array.isArray(data)) {
-      return data as Appointment[];
-    }
-  }
-
-  return [];
+  return extractArrayFromPayload<Appointment>(response, ["appointments"]);
 }
 
 export async function createAppointment(payload: {
@@ -311,5 +304,10 @@ export async function register(payload: RegisterPayload) {
 }
 
 export async function getAuthMe() {
-  return request<User>(`${API_PREFIX}/auth/me`);
+  const response = await request<unknown>(`${API_PREFIX}/auth/me`);
+  const user = extractObjectFromPayload<User & Record<string, unknown>>(response, ["user"]);
+  if (!user) {
+    throw new ApiError("Could not read auth profile payload", 500, response);
+  }
+  return user as User;
 }
