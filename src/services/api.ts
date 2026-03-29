@@ -1,33 +1,112 @@
-import { posts, resources, currentUser, dashboardStats, symptoms, appointments } from "@/data/yourData";
+import type { Appointment, Post, Resource, Stat, Symptom, User } from "@/types/domain";
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+
+export class ApiError extends Error {
+  readonly status: number;
+  readonly body?: unknown;
+
+  constructor(message: string, status: number, body?: unknown) {
+    super(message);
+    this.status = status;
+    this.body = body;
+  }
+}
+
+type RequestOptions = RequestInit & {
+  params?: Record<string, string | number | boolean | undefined>;
+};
+
+function withQueryParams(path: string, params?: RequestOptions["params"]) {
+  if (!params) {
+    return path;
+  }
+
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined) {
+      search.set(key, String(value));
+    }
+  });
+
+  const query = search.toString();
+  return query ? `${path}?${query}` : path;
+}
+
+async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const { headers, params, ...restOptions } = options;
+  const response = await fetch(`${API_BASE_URL}${withQueryParams(path, params)}`, {
+    ...restOptions,
+    headers: {
+      "Content-Type": "application/json",
+      ...headers,
+    },
+  });
+
+  const text = await response.text();
+  let body: unknown = null;
+  if (text) {
+    try {
+      body = JSON.parse(text);
+    } catch {
+      body = text;
+    }
+  }
+
+  if (!response.ok) {
+    throw new ApiError(`Request failed: ${response.status}`, response.status, body);
+  }
+
+  return body as T;
+}
 
 export async function getPosts() {
-  await delay(500);
-  return posts;
+  return request<Post[]>("/api/posts");
+}
+
+export async function createPost(payload: { content: string; tags: string[] }) {
+  return request<Post>("/api/posts", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function getResources() {
-  await delay(500);
-  return resources;
+  return request<Resource[]>("/api/resources");
 }
 
 export async function getUserStats() {
-  await delay(300);
-  return dashboardStats;
+  return request<Stat[]>("/api/stats");
 }
 
 export async function getCurrentUser() {
-  await delay(300);
-  return currentUser;
+  return request<User>("/api/users/me");
 }
 
 export async function getSymptoms() {
-  await delay(400);
-  return symptoms;
+  return request<Symptom[]>("/api/symptoms");
+}
+
+export async function createSymptom(payload: { name: string; severity: number; date?: string }) {
+  return request<Symptom>("/api/symptoms", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function getAppointments() {
-  await delay(400);
-  return appointments;
+  return request<Appointment[]>("/api/appointments");
+}
+
+export async function createAppointment(payload: {
+  doctor: string;
+  specialty: string;
+  date: string;
+  time: string;
+  type: Appointment["type"];
+}) {
+  return request<Appointment>("/api/appointments", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
