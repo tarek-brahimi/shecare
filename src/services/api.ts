@@ -95,11 +95,15 @@ function withQueryParams(path: string, params?: RequestOptions["params"]) {
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { headers, params, skipAuth, ...restOptions } = options;
+  const method = (restOptions.method ?? "GET").toUpperCase();
+  const isGetRequest = method === "GET";
   const maybeAuthHeaders = !skipAuth && accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
   const response = await fetch(`${API_BASE_URL}${withQueryParams(path, params)}`, {
     ...restOptions,
+    cache: isGetRequest ? "no-store" : restOptions.cache,
     headers: {
       "Content-Type": "application/json",
+      ...(isGetRequest ? { "Cache-Control": "no-cache", Pragma: "no-cache" } : {}),
       ...maybeAuthHeaders,
       ...headers,
     },
