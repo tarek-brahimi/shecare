@@ -123,7 +123,25 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 }
 
 export async function getPosts() {
-  return request<Post[]>(`${API_PREFIX}/posts`);
+  const response = await request<unknown>(`${API_PREFIX}/posts`);
+
+  if (Array.isArray(response)) {
+    return response as Post[];
+  }
+
+  if (isRecord(response)) {
+    const posts = response.posts;
+    if (Array.isArray(posts)) {
+      return posts as Post[];
+    }
+
+    const data = response.data;
+    if (Array.isArray(data)) {
+      return data as Post[];
+    }
+  }
+
+  return [];
 }
 
 export async function createPost(payload: {
@@ -193,7 +211,25 @@ export async function getCurrentUser() {
 }
 
 export async function getSymptoms() {
-  return request<Symptom[]>(`${API_PREFIX}/symptoms`);
+  const response = await request<unknown>(`${API_PREFIX}/symptoms`);
+
+  if (Array.isArray(response)) {
+    return response as Symptom[];
+  }
+
+  if (isRecord(response)) {
+    const symptoms = response.symptoms;
+    if (Array.isArray(symptoms)) {
+      return symptoms as Symptom[];
+    }
+
+    const data = response.data;
+    if (Array.isArray(data)) {
+      return data as Symptom[];
+    }
+  }
+
+  return [];
 }
 
 export async function createSymptom(payload: { name: string; severity: number; date?: string }) {
@@ -204,7 +240,25 @@ export async function createSymptom(payload: { name: string; severity: number; d
 }
 
 export async function getAppointments() {
-  return request<Appointment[]>(`${API_PREFIX}/appointments`);
+  const response = await request<unknown>(`${API_PREFIX}/appointments`);
+
+  if (Array.isArray(response)) {
+    return response as Appointment[];
+  }
+
+  if (isRecord(response)) {
+    const appointments = response.appointments;
+    if (Array.isArray(appointments)) {
+      return appointments as Appointment[];
+    }
+
+    const data = response.data;
+    if (Array.isArray(data)) {
+      return data as Appointment[];
+    }
+  }
+
+  return [];
 }
 
 export async function createAppointment(payload: {
