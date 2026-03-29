@@ -9,9 +9,10 @@ export interface User {
 }
 
 export interface Post {
-  id: string;
+  post_id: string;
   title?: string;
   authorName: string;
+  author_id: string;
   content: string;
   tags: string[];
   createdAt: string;
