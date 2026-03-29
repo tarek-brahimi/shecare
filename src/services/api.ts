@@ -133,6 +133,25 @@ export async function createPost(payload: Post) {
   });
 }
 
+export async function likePost(postId: string) {
+  return request<unknown>(`${API_PREFIX}/posts/${postId}/like`, {
+    method: "POST",
+  });
+}
+
+export async function sharePost(postId: string) {
+  return request<unknown>(`${API_PREFIX}/posts/${postId}/share`, {
+    method: "POST",
+  });
+}
+
+export async function commentOnPost(postId: string, comment: string) {
+  return request<unknown>(`${API_PREFIX}/posts/${postId}/comment`, {
+    method: "POST",
+    body: JSON.stringify({ content: comment, comment }),
+  });
+}
+
 export async function getResources() {
   return request<Resource[]>(`${API_PREFIX}/resources`);
 }
