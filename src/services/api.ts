@@ -1,5 +1,4 @@
 import type { Appointment, Post, Resource, Stat, Symptom, User } from "@/types/domain";
-import { A } from "vitest/dist/chunks/environment.d.cL3nLXbE.js";
 
 const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim();
 const API_PREFIX = "/api/v1";

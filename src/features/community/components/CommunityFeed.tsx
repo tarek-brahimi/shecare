@@ -60,8 +60,8 @@ export function CreatePostCard() {
     try {
       await createPostMutation.mutateAsync({
         title: trimmedTitle,
-        authorName: user.name || "Anonymous",
-        author_id: user.id,
+        authorName: user?.name || "Anonymous",
+        author_id: user?.id,
         content: trimmedContent,
         tags: selectedTags,
         createdAt: new Date().toISOString(),
