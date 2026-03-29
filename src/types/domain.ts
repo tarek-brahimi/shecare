@@ -10,8 +10,8 @@ export interface User {
 
 export interface Post {
   id: string;
+  title?: string;
   authorName: string;
-  authorAvatar: string;
   content: string;
   tags: string[];
   createdAt: string;
