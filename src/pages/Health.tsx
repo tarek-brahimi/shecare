@@ -1,4 +1,4 @@
-import { SymptomsTracker } from "@/features/health-tracking/components/SymptomsTracker";
+import { SymptomsTracker } from "@/features/health-tracking/SymptomsTracker";
 
 export default function Health() {
   return (

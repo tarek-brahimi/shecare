@@ -1,4 +1,4 @@
-import { WelcomeHeader, StatsGrid, TreatmentProgress, QuickActions } from "@/features/health-tracking";
+import { WelcomeHeader, StatsGrid, TreatmentProgress, QuickActions } from "@/features/health-tracking/DashboardWidgets";
 
 export default function Dashboard() {
   return (

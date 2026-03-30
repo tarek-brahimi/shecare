@@ -1,4 +1,4 @@
-import { HeroSection, FeaturesSection } from "@/features/landing";
+import HeroSection, { FeaturesSection } from "@/features/landing/HeroSection";
 
 export default function Landing() {
   return (

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FiHome, FiHeart, FiUsers, FiBook, FiMessageCircle, FiVideo, FiMenu, FiX, FiMoon, FiSun, FiLogOut } from "react-icons/fi";
 import { useDarkMode } from "@/context/DarkModeContext";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/useAuth";
 
 const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: FiHome },

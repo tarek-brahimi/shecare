@@ -39,7 +39,6 @@ export function SymptomsTracker() {
     await createSymptomMutation.mutateAsync({
       name: symptomName.trim(),
       severity: parsedSeverity,
-      date: new Date().toISOString().slice(0, 10),
     });
   };
 

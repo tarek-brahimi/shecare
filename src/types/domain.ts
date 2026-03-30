@@ -9,9 +9,10 @@ export interface User {
 }
 
 export interface Post {
-  id: string;
+  post_id: string;
+  title?: string;
   authorName: string;
-  authorAvatar: string;
+  author_id: string;
   content: string;
   tags: string[];
   createdAt: string;
@@ -47,6 +48,7 @@ export interface Symptom {
 
 export interface Appointment {
   id: string;
+  user_id: string;
   doctor: string;
   specialty: string;
   date: string;

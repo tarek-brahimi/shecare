@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/useAuth";
+import { getApiErrorMessage } from "@/services/api";
 import { SheCard } from "@/ui/Card";
 import { SheInput } from "@/ui/Input";
 import { SheButton } from "@/ui/Button";
+
+const STRONG_PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/;
 
 export default function Register() {
   const { registerUser } = useAuth();
@@ -23,8 +26,13 @@ export default function Register() {
       await registerUser({ name, email, password });
       toast.success("Your account has been created.");
       navigate("/dashboard", { replace: true });
-    } catch {
-      toast.error("Registration failed. Please try again.");
+    } catch (error) {
+      toast.error(
+        getApiErrorMessage(
+          error,
+          "Registration failed. Use uppercase, lowercase, a number, and one of @$!%*?&."
+        )
+      );
     } finally {
       setLoading(false);
     }
@@ -40,6 +48,7 @@ export default function Register() {
           <SheInput
             type="text"
             placeholder="Full name"
+            autoComplete="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -47,6 +56,7 @@ export default function Register() {
           <SheInput
             type="email"
             placeholder="Email"
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -54,10 +64,13 @@ export default function Register() {
           <SheInput
             type="password"
             placeholder="Password"
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
+            pattern={STRONG_PASSWORD_PATTERN.source}
+            title="Password must include uppercase, lowercase, number, and one special character from @$!%*?&."
           />
           <SheButton type="submit" className="w-full" disabled={loading || !name || !email || !password}>
             {loading ? "Creating account..." : "Create Account"}

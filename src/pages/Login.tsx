@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/useAuth";
+import { getApiErrorMessage } from "@/services/api";
 import { SheCard } from "@/ui/Card";
 import { SheInput } from "@/ui/Input";
 import { SheButton } from "@/ui/Button";
@@ -28,8 +29,8 @@ export default function Login() {
       await loginUser({ email, password });
       toast.success("Welcome back.");
       navigate(redirectTo, { replace: true });
-    } catch {
-      toast.error("Login failed. Check your email and password.");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Login failed. Check your email and password."));
     } finally {
       setLoading(false);
     }
@@ -45,6 +46,7 @@ export default function Login() {
           <SheInput
             type="email"
             placeholder="Email"
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -52,6 +54,7 @@ export default function Login() {
           <SheInput
             type="password"
             placeholder="Password"
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required

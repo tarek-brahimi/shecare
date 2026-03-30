@@ -1,4 +1,4 @@
-import { ResourcesGrid } from "@/features/community/components/ResourcesGrid";
+import { ResourcesGrid } from "@/features/community/ResourcesGrid";
 
 export default function Resources() {
   return (

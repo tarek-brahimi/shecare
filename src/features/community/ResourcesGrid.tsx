@@ -58,9 +58,29 @@ export function ResourcesGrid() {
   const { data: resources, isLoading, isError } = useQuery({ queryKey: ["resources"], queryFn: getResources });
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>("all");
+  const resourcesList = (Array.isArray(resources) ? resources : []).map((resource, index): Resource => {
+    const raw = (resource ?? {}) as Partial<Resource>;
+    const category = raw.category === "guide" || raw.category === "video" || raw.category === "pdf"
+      ? raw.category
+      : "guide";
 
-  const filtered = resources?.filter((r) => {
-    const matchSearch = r.title.toLowerCase().includes(search.toLowerCase()) || r.description.toLowerCase().includes(search.toLowerCase());
+    return {
+      id: typeof raw.id === "string" && raw.id.trim() ? raw.id : `resource-${index}`,
+      title: typeof raw.title === "string" && raw.title.trim() ? raw.title : "Untitled resource",
+      description: typeof raw.description === "string" ? raw.description : "",
+      category,
+      featured: Boolean(raw.featured),
+      imageUrl: typeof raw.imageUrl === "string" ? raw.imageUrl : undefined,
+      duration: typeof raw.duration === "string" ? raw.duration : undefined,
+      author: typeof raw.author === "string" && raw.author.trim() ? raw.author : "SheCare",
+    };
+  });
+
+  const filtered = resourcesList.filter((r) => {
+    const searchText = search.trim().toLowerCase();
+    const matchSearch = !searchText
+      || r.title.toLowerCase().includes(searchText)
+      || r.description.toLowerCase().includes(searchText);
     const matchCategory = category === "all" || r.category === category;
     return matchSearch && matchCategory;
   });

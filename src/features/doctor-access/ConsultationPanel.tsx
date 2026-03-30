@@ -36,16 +36,11 @@ export function ConsultationPanel() {
       return;
     }
 
-    const parsedTime = new Date(`1970-01-01T${time}`).toLocaleTimeString([], {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-
     await createAppointmentMutation.mutateAsync({
       doctor: doctor.trim(),
       specialty: specialty.trim(),
       date,
-      time: parsedTime,
+      time,
       type: appointmentType,
     });
   };

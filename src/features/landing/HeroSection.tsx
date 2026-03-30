@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { FiArrowRight, FiHeart, FiUsers, FiShield } from "react-icons/fi";
 import { SheButton } from "@/ui/Button";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/useAuth";
 
 export default function HeroSection() {
   const { isAuthenticated } = useAuth();
