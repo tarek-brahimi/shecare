@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { FiHome, FiHeart, FiUsers, FiBook, FiMessageCircle, FiVideo, FiMenu, FiX, FiMoon, FiSun } from "react-icons/fi";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { FiHome, FiHeart, FiUsers, FiBook, FiMessageCircle, FiVideo, FiMenu, FiX, FiMoon, FiSun, FiLogOut } from "react-icons/fi";
 import { useDarkMode } from "@/context/DarkModeContext";
+import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: FiHome },
@@ -14,8 +15,15 @@ const navItems = [
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isDarkMode, toggleDarkMode } = useDarkMode();
+  const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -46,13 +54,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-        <div className="p-4 border-t border-border">
+        <div className="p-4 border-t border-border space-y-2">
+          <div className="px-4 py-2 text-sm text-muted-foreground">
+            Signed in as <span className="text-foreground font-medium">{user?.name || "User"}</span>
+          </div>
           <button
             onClick={toggleDarkMode}
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all w-full"
           >
             {isDarkMode ? <FiSun className="w-5 h-5" /> : <FiMoon className="w-5 h-5" />}
             {isDarkMode ? "Light Mode" : "Dark Mode"}
+          </button>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all w-full"
+          >
+            <FiLogOut className="w-5 h-5" />
+            Sign Out
           </button>
         </div>
       </aside>
@@ -64,6 +82,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <span className="text-lg font-bold text-foreground">SheCare</span>
         </Link>
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleLogout}
+            className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground"
+            aria-label="Sign out"
+          >
+            <FiLogOut className="w-5 h-5" />
+          </button>
           <button onClick={toggleDarkMode} className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
             {isDarkMode ? <FiSun className="w-5 h-5" /> : <FiMoon className="w-5 h-5" />}
           </button>

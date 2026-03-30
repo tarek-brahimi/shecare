@@ -1,7 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 
-interface SheInputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+type SheInputProps = React.InputHTMLAttributes<HTMLInputElement>;
 
 export function SheInput({ className, ...props }: SheInputProps) {
   return (

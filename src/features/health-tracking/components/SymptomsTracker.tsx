@@ -1,7 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
-import { getSymptoms } from "@/services/api";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createSymptom, getSymptoms } from "@/services/api";
 import { SheCard } from "@/ui/Card";
 import { SheButton } from "@/ui/Button";
+import { SheInput } from "@/ui/Input";
 import { getCurrentUser } from "@/services/api";
 import { getProgressPercent } from "@/utils/helpers";
 import { FiActivity, FiPlus, FiTrendingUp } from "react-icons/fi";
@@ -13,9 +15,33 @@ const severityColor = (s: number) => {
 };
 
 export function SymptomsTracker() {
-  const { data: symptoms, isLoading } = useQuery({ queryKey: ["symptoms"], queryFn: getSymptoms });
+  const [symptomName, setSymptomName] = useState("");
+  const [severity, setSeverity] = useState("5");
+  const queryClient = useQueryClient();
+  const { data: symptoms, isLoading, isError } = useQuery({ queryKey: ["symptoms"], queryFn: getSymptoms });
   const { data: user } = useQuery({ queryKey: ["user"], queryFn: getCurrentUser });
+  const createSymptomMutation = useMutation({
+    mutationFn: createSymptom,
+    onSuccess: () => {
+      setSymptomName("");
+      setSeverity("5");
+      queryClient.invalidateQueries({ queryKey: ["symptoms"] });
+    },
+  });
   const percent = user ? getProgressPercent(user.treatmentDay, user.totalTreatmentDays) : 0;
+
+  const handleLogSymptom = async () => {
+    const parsedSeverity = Number(severity);
+    if (!symptomName.trim() || Number.isNaN(parsedSeverity) || parsedSeverity < 1 || parsedSeverity > 10) {
+      return;
+    }
+
+    await createSymptomMutation.mutateAsync({
+      name: symptomName.trim(),
+      severity: parsedSeverity,
+      date: new Date().toISOString().slice(0, 10),
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -50,12 +76,37 @@ export function SymptomsTracker() {
       <SheCard>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-foreground">Today's Symptoms</h3>
-          <SheButton variant="ghost" size="sm"><FiPlus className="w-4 h-4" /> Log</SheButton>
+          <SheButton
+            variant="ghost"
+            size="sm"
+            onClick={handleLogSymptom}
+            disabled={createSymptomMutation.isPending || !symptomName.trim()}
+          >
+            <FiPlus className="w-4 h-4" /> {createSymptomMutation.isPending ? "Saving..." : "Log"}
+          </SheButton>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
+          <SheInput
+            value={symptomName}
+            onChange={(e) => setSymptomName(e.target.value)}
+            placeholder="Symptom name"
+            className="sm:col-span-2"
+          />
+          <SheInput
+            type="number"
+            min={1}
+            max={10}
+            value={severity}
+            onChange={(e) => setSeverity(e.target.value)}
+            placeholder="Severity 1-10"
+          />
         </div>
         {isLoading ? (
           <div className="space-y-3">
             {[...Array(3)].map((_, i) => <div key={i} className="h-10 bg-muted rounded-xl animate-pulse" />)}
           </div>
+        ) : isError ? (
+          <p className="text-sm text-destructive">Could not load your symptoms right now.</p>
         ) : (
           <div className="space-y-3">
             {symptoms?.map((s) => (
@@ -73,6 +124,9 @@ export function SymptomsTracker() {
               </div>
             ))}
           </div>
+        )}
+        {createSymptomMutation.isError && (
+          <p className="text-xs text-destructive mt-3">Failed to log symptom. Please try again.</p>
         )}
       </SheCard>
     </div>

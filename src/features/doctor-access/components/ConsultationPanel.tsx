@@ -1,12 +1,54 @@
-import { useQuery } from "@tanstack/react-query";
-import { getAppointments } from "@/services/api";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createAppointment, getAppointments } from "@/services/api";
 import { SheCard } from "@/ui/Card";
 import { SheButton } from "@/ui/Button";
+import { SheInput } from "@/ui/Input";
 import { FiCalendar, FiVideo, FiMapPin, FiPlus } from "react-icons/fi";
 import { formatDate } from "@/utils/helpers";
+import type { Appointment } from "@/types/domain";
 
 export function ConsultationPanel() {
-  const { data: appointments, isLoading } = useQuery({ queryKey: ["appointments"], queryFn: getAppointments });
+  const [doctor, setDoctor] = useState("");
+  const [specialty, setSpecialty] = useState("");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [appointmentType, setAppointmentType] = useState<Appointment["type"]>("teleconsultation");
+
+  const queryClient = useQueryClient();
+  const { data: appointments, isLoading, isError } = useQuery({ queryKey: ["appointments"], queryFn: getAppointments });
+  const createAppointmentMutation = useMutation({
+    mutationFn: createAppointment,
+    onSuccess: () => {
+      setDoctor("");
+      setSpecialty("");
+      setDate("");
+      setTime("");
+      setAppointmentType("teleconsultation");
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+    },
+  });
+
+  const canSchedule = doctor.trim() && specialty.trim() && date && time;
+
+  const handleSchedule = async () => {
+    if (!canSchedule) {
+      return;
+    }
+
+    const parsedTime = new Date(`1970-01-01T${time}`).toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+
+    await createAppointmentMutation.mutateAsync({
+      doctor: doctor.trim(),
+      specialty: specialty.trim(),
+      date,
+      time: parsedTime,
+      type: appointmentType,
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -17,7 +59,46 @@ export function ConsultationPanel() {
           </div>
           <h3 className="text-lg font-semibold text-foreground mb-2">Teleconsultation</h3>
           <p className="text-sm text-muted-foreground mb-4 max-w-sm mx-auto">Connect with your healthcare provider from the comfort of your home.</p>
-          <SheButton size="lg"><FiPlus className="w-4 h-4" /> Schedule Consultation</SheButton>
+          <div className="grid sm:grid-cols-2 gap-2 text-left max-w-xl mx-auto mb-4">
+            <SheInput
+              value={doctor}
+              onChange={(e) => setDoctor(e.target.value)}
+              placeholder="Doctor name"
+            />
+            <SheInput
+              value={specialty}
+              onChange={(e) => setSpecialty(e.target.value)}
+              placeholder="Specialty"
+            />
+            <SheInput type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <SheInput type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+          </div>
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <SheButton
+              variant={appointmentType === "teleconsultation" ? "primary" : "secondary"}
+              size="sm"
+              onClick={() => setAppointmentType("teleconsultation")}
+            >
+              Teleconsultation
+            </SheButton>
+            <SheButton
+              variant={appointmentType === "in-person" ? "primary" : "secondary"}
+              size="sm"
+              onClick={() => setAppointmentType("in-person")}
+            >
+              In-person
+            </SheButton>
+          </div>
+          <SheButton
+            size="lg"
+            onClick={handleSchedule}
+            disabled={createAppointmentMutation.isPending || !canSchedule}
+          >
+            <FiPlus className="w-4 h-4" /> {createAppointmentMutation.isPending ? "Scheduling..." : "Schedule Consultation"}
+          </SheButton>
+          {createAppointmentMutation.isError && (
+            <p className="text-xs text-destructive mt-3">Could not schedule consultation. Please try again.</p>
+          )}
         </div>
       </SheCard>
 
@@ -27,6 +108,8 @@ export function ConsultationPanel() {
           <div className="space-y-3">
             {[...Array(2)].map((_, i) => <div key={i} className="h-16 bg-muted rounded-xl animate-pulse" />)}
           </div>
+        ) : isError ? (
+          <p className="text-sm text-destructive">Could not load appointments right now.</p>
         ) : (
           <div className="space-y-3">
             {appointments?.map((apt) => (

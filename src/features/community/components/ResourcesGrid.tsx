@@ -5,7 +5,7 @@ import { SheCard } from "@/ui/Card";
 import { SheInput } from "@/ui/Input";
 import { SheButton } from "@/ui/Button";
 import { FiSearch, FiBookOpen, FiPlayCircle, FiDownload, FiStar } from "react-icons/fi";
-import type { Resource } from "@/data/yourData";
+import type { Resource } from "@/types/domain";
 
 const categoryIcons: Record<string, React.ElementType> = {
   guide: FiBookOpen,
@@ -55,7 +55,7 @@ function ResourceCard({ resource }: { resource: Resource }) {
 }
 
 export function ResourcesGrid() {
-  const { data: resources, isLoading } = useQuery({ queryKey: ["resources"], queryFn: getResources });
+  const { data: resources, isLoading, isError } = useQuery({ queryKey: ["resources"], queryFn: getResources });
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>("all");
 
@@ -111,6 +111,10 @@ export function ResourcesGrid() {
             </SheCard>
           ))}
         </div>
+      ) : isError ? (
+        <SheCard className="text-center py-12">
+          <p className="text-destructive">Could not load resources right now.</p>
+        </SheCard>
       ) : (
         <>
           {featured && featured.length > 0 && (

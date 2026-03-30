@@ -1,7 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 
-interface SheTextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
+type SheTextAreaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>;
 
 export function SheTextArea({ className, ...props }: SheTextAreaProps) {
   return (

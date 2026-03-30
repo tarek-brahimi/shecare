@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
 import { FiArrowRight, FiHeart, FiUsers, FiShield } from "react-icons/fi";
 import { SheButton } from "@/ui/Button";
+import { useAuth } from "@/context/AuthContext";
 
 export default function HeroSection() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <section className="relative overflow-hidden">
       <div className="absolute inset-0 shecare-gradient opacity-5 rounded-3xl" />
@@ -18,14 +21,14 @@ export default function HeroSection() {
           SheCare empowers women with breast cancer through medical support, mental health care, and a caring community.
         </p>
         <div className="flex items-center justify-center gap-4 flex-wrap">
-          <Link to="/dashboard">
+          <Link to={isAuthenticated ? "/dashboard" : "/login"}>
             <SheButton size="lg">
-              Get Started <FiArrowRight className="w-4 h-4" />
+              {isAuthenticated ? "Go to Dashboard" : "Sign In"} <FiArrowRight className="w-4 h-4" />
             </SheButton>
           </Link>
-          <Link to="/community">
+          <Link to={isAuthenticated ? "/community" : "/register"}>
             <SheButton variant="outline" size="lg">
-              Join Community
+              {isAuthenticated ? "Join Community" : "Create Account"}
             </SheButton>
           </Link>
         </div>

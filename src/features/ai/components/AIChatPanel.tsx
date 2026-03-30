@@ -53,22 +53,29 @@ export function AIChatPanel() {
         
         const result = await predictCancer(DEFAULT_FEATURES);
         
-        const response = result.resultat.includes("Bénin")
-          ? `✅ Good news! Your assessment result: **Benign** (probability: ${(result.probabilite * 100).toFixed(1)}%)\n\nThis suggests low risk. However, please consult your doctor regularly. ${result.message}`
-          : `⚠️ Assessment result: **Malignant** (probability: ${((1 - result.probabilite) * 100).toFixed(1)}%)\n\nPlease consult a medical professional as soon as possible. ${result.message}`;
+        const resultLabel = String(result.resultat || result.result || "").toLowerCase();
+        const probability = typeof result.probabilite === "number"
+          ? result.probabilite
+          : typeof result.probability === "number"
+            ? result.probability
+            : 0;
+        const isBenign = ["benin", "benign", "b9", "negative"].some((token) => resultLabel.includes(token));
+
+        const response = isBenign
+          ? `Good news. Your assessment result is Benign (probability: ${(probability * 100).toFixed(1)}%).\n\nThis suggests lower risk, but regular follow-up with your doctor is still important. ${result.message || ""}`
+          : `Assessment result is Malignant (probability: ${((1 - probability) * 100).toFixed(1)}%).\n\nPlease contact a medical professional as soon as possible for formal diagnosis and next steps. ${result.message || ""}`;
         
         addMessage(response, "ai");
 
       } else {
-        // Réponse générale pour les autres messages
         addMessage(
           "I'm here to support you 💜 Type 'scan' to run a breast cancer risk assessment, or ask me about symptoms, prevention, or resources.",
           "ai"
         );
       }
-    } catch (error) {
+    } catch {
       addMessage(
-        "⚠️ Could not connect to the AI model. Make sure the API is running on http://127.0.0.1:8000",
+        "Could not connect to the AI model. Make sure your AI API is running and VITE_AI_API_URL is configured.",
         "ai"
       );
     } finally {

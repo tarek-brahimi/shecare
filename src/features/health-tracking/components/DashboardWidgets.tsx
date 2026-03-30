@@ -1,8 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getUserStats, getCurrentUser } from "@/services/api";
-import { FiCalendar, FiHeart, FiUsers, FiClock, FiActivity, FiMessageCircle, FiVideo, FiZap } from "react-icons/fi";
+import { FiCalendar, FiHeart, FiUsers, FiClock, FiActivity, FiMessageCircle, FiZap } from "react-icons/fi";
 import { SheCard } from "@/ui/Card";
-import { SheButton } from "@/ui/Button";
 import { getProgressPercent } from "@/utils/helpers";
 import { Link } from "react-router-dom";
 
@@ -21,7 +20,7 @@ const colorMap: Record<string, string> = {
 };
 
 export function StatsGrid() {
-  const { data: stats, isLoading } = useQuery({ queryKey: ["stats"], queryFn: getUserStats });
+  const { data: stats, isLoading, isError } = useQuery({ queryKey: ["stats"], queryFn: getUserStats });
 
   if (isLoading) {
     return (
@@ -34,6 +33,14 @@ export function StatsGrid() {
           </SheCard>
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <SheCard className="col-span-full text-center py-12">
+        <p className="text-destructive">Could not load your dashboard stats.</p>
+      </SheCard>
     );
   }
 

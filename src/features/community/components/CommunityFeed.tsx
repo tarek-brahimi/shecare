@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getPosts } from "@/services/api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createPost, getPosts } from "@/services/api";
 import { SheCard } from "@/ui/Card";
 import { SheTextArea } from "@/ui/TextArea";
 import { SheButton } from "@/ui/Button";
@@ -19,9 +19,29 @@ const tagColors: Record<string, string> = {
 export function CreatePostCard() {
   const [content, setContent] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const queryClient = useQueryClient();
+  const createPostMutation = useMutation({
+    mutationFn: createPost,
+    onSuccess: () => {
+      setContent("");
+      setSelectedTags([]);
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+  });
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]);
+  };
+
+  const handleSubmit = async () => {
+    if (!content.trim()) {
+      return;
+    }
+
+    await createPostMutation.mutateAsync({
+      content: content.trim(),
+      tags: selectedTags,
+    });
   };
 
   return (
@@ -49,14 +69,23 @@ export function CreatePostCard() {
             </button>
           ))}
         </div>
-        <SheButton size="sm" disabled={!content.trim()}>Post</SheButton>
+        <SheButton
+          size="sm"
+          onClick={handleSubmit}
+          disabled={!content.trim() || createPostMutation.isPending}
+        >
+          {createPostMutation.isPending ? "Posting..." : "Post"}
+        </SheButton>
       </div>
+      {createPostMutation.isError && (
+        <p className="text-xs text-destructive mt-2">Could not publish your post. Please try again.</p>
+      )}
     </SheCard>
   );
 }
 
 export function PostsFeed() {
-  const { data: posts, isLoading } = useQuery({ queryKey: ["posts"], queryFn: getPosts });
+  const { data: posts, isLoading, isError } = useQuery({ queryKey: ["posts"], queryFn: getPosts });
 
   if (isLoading) {
     return (
@@ -75,6 +104,14 @@ export function PostsFeed() {
           </SheCard>
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <SheCard className="text-center py-12">
+        <p className="text-destructive">Could not load posts right now.</p>
+      </SheCard>
     );
   }
 
